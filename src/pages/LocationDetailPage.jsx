@@ -15,6 +15,9 @@ import { sites } from "../core/data/hanoiHeritageSites";
 import { useHeritage } from "../core/context/HeritageContext";
 import { useAudio } from "../core/context/AudioPlayerContext";
 import { getCategoryTextClass } from "../core/utils/categoryStyles";
+import { usePayment } from "../core/context/PaymentContext";
+import { useNavigate } from "react-router-dom";
+import NotFoundPage from "./NotFoundPage";
 
 const categoryColors = {
   Cultural: "#0f766e",
@@ -28,11 +31,14 @@ const formatTime = (seconds = 0) =>
 
 export default function LocationDetailPage() {
   const { id } = useParams();
-  const site = sites.find((item) => item.id === id) || sites[0];
+  const site = sites.find((item) => item.id === id);
   const { language, favorites, toggleFavorite } = useHeritage();
+  const navigate = useNavigate();
+  const { hasAccess } = usePayment();
   const audio = useAudio();
   const {
     current,
+    error,
     playing,
     play,
     progress,
@@ -43,8 +49,11 @@ export default function LocationDetailPage() {
     duration,
     rate,
     setRate,
+    language: audioLanguage,
     setLanguage: setAudioLanguage,
   } = audio;
+
+  if (!site) return <NotFoundPage />;
 
   const title = site.name[language] || site.name.en;
   const active = current?.id === site.id;
@@ -56,6 +65,10 @@ export default function LocationDetailPage() {
 
   const changeLanguage = (nextLanguage) => {
     setAudioLanguage(nextLanguage);
+    if (active && playing) {
+      audio.stop();
+      window.setTimeout(() => audio.play(site), 0);
+    }
   };
 
   return (
@@ -116,8 +129,8 @@ export default function LocationDetailPage() {
               <label className="flex items-center text-xs">
                 <Globe className="w-4 h-4 text-slate-500 mr-2" />
                 <select
-                  value={language}
-                  onChange={(event) => changeLanguage(event.target.value)}
+                   value={audioLanguage}
+                   onChange={(event) => changeLanguage(event.target.value)}
                   className="bg-slate-100/80 border border-slate-200/80 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800 min-w-[130px] outline-none"
                 >
                   <option value="vi">Vietnamese</option>
@@ -129,6 +142,7 @@ export default function LocationDetailPage() {
                 </select>
               </label>
             </div>
+            {error && <p className="mb-3 text-xs text-amber-600">{error}</p>}
             <p className="text-xs text-slate-500 leading-relaxed mb-5">
               {site.description[language] || site.description.en}
             </p>
@@ -165,7 +179,13 @@ export default function LocationDetailPage() {
               </button>
               <button
                 aria-label={active && playing ? "Pause audio" : "Play audio"}
-                onClick={() => play(site)}
+                onClick={() => {
+                  if (!hasAccess) {
+                    navigate(`/paywall?next=/location/${site.id}`);
+                    return;
+                  }
+                  play(site);
+                }}
                 className="w-11 h-11 bg-slate-950 hover:bg-slate-800 text-white rounded-xl flex items-center justify-center shadow-sm transition"
               >
                 <span className="w-4 h-4 flex items-center justify-center">

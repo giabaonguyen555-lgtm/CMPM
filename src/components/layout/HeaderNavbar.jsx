@@ -3,6 +3,7 @@ import { Globe, User, Menu, X, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useHeritage } from "../../core/context/HeritageContext";
 import { t } from "../../core/data/hanoiHeritageSites";
+import { useAuth } from "../../core/context/AuthContext";
 
 const languageOptions = [
   ["vi", "Tiếng Việt"],
@@ -15,6 +16,7 @@ const languageOptions = [
 
 export default function Header() {
   const { language, setLanguage } = useHeritage();
+  const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
@@ -129,18 +131,35 @@ export default function Header() {
             </button>
             {userOpen && (
               <div className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] w-40 rounded-xl border border-gray-200 bg-white p-1.5 text-sm shadow-lg shadow-gray-900/10">
-                <Link
-                  className="block rounded-lg px-3 py-2 hover:bg-gray-50 transition"
-                  to="/login"
-                >
-                  Log in
-                </Link>
-                <Link
-                  className="block rounded-lg px-3 py-2 hover:bg-gray-50 transition"
-                  to="/register"
-                >
-                  Register
-                </Link>
+                {user ? (
+                  <>
+                    <span className="block truncate px-3 py-2 text-xs text-gray-500">
+                      {user.email}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={logout}
+                      className="block w-full rounded-lg px-3 py-2 text-left hover:bg-gray-50 transition"
+                    >
+                      Log out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      className="block rounded-lg px-3 py-2 hover:bg-gray-50 transition"
+                      to="/login"
+                    >
+                      Log in
+                    </Link>
+                    <Link
+                      className="block rounded-lg px-3 py-2 hover:bg-gray-50 transition"
+                      to="/register"
+                    >
+                      Register
+                    </Link>
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -18,6 +18,11 @@ export default function StickyPlayer() {
   const {
     current,
     playing,
+    loading,
+     error,
+     status,
+     retry,
+     language,
     togglePlay,
     closePlayer,
     progress,
@@ -38,8 +43,17 @@ export default function StickyPlayer() {
         <div className="player-title">
           <img src={current.image} alt="" className="player-thumb" />
           <div className="min-w-0">
-            <b>{current.name.en}</b>
-            <small>{current.category} · Audio guide</small>
+            <b>{current.name[language] || current.name.en}</b>
+             <small>
+               {loading
+                 ? "Loading audio…"
+                 : error || `${status === "ended" ? "Finished · " : ""}${current.category} · Audio guide`}
+               {error && (
+                 <button type="button" className="ml-2 underline" onClick={retry}>
+                   Retry
+                 </button>
+               )}
+             </small>
           </div>
         </div>
         <div className="player-center-row">
@@ -129,3 +143,4 @@ export default function StickyPlayer() {
     </div>
   );
 }
+
